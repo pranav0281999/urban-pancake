@@ -7,7 +7,7 @@ const socketServer = require("socket.io").Server;
 
 let io = new socketServer(http);
 
-const port = 8080;
+var port = process.env.PORT || 3000;
 
 app.use(express.static('public'));
 
