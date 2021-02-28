@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "start": "npm run build && node server.js"
+    "start": "npm run build && node server.js",
+    "postinstall": "npm run start"
   },
   "author": "pranav0281999",
   "license": "ISC",
