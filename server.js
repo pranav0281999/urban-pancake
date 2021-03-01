@@ -7,7 +7,7 @@ const socketServer = require("socket.io").Server;
 
 let io = new socketServer(http);
 
-var port = process.env.PORT || 3000;
+const port = 8080;
 
 app.use(express.static('public'));
 
@@ -16,7 +16,46 @@ http.listen(port, () => {
 });
 
 io.on("connection", client => {
-    client.on("update", (data) => {
-        io.sockets.emit("update", data);
+    const chatroom = client.handshake.query.chatroom;
+
+    console.log("Client connected for room: " + chatroom);
+
+    /**
+     * data format:
+     * {
+     * objectType: String - ["cone", "arrow"]
+     * objectUUID: String
+     * }
+     * */
+    client.on("object_create", data => {
+        console.log("object_create");
+        io.sockets.emit("object_create", data);
+    });
+
+    /**
+     * data format:
+     * {
+     * position: {x,y,z}
+     * objectUUID: String
+     * }
+     * */
+    client.on("object_transform", data => {
+        console.log("object_transform", data);
+        io.sockets.emit("object_transform", data);
+    });
+
+    /**
+     * data format:
+     * {
+     * objectUUID: String
+     * }
+     * */
+    client.on("object_delete", data => {
+        console.log("object_delete", data);
+        io.sockets.emit("object_delete", data);
+    });
+
+    client.on("disconnect", (reason) => {
+        console.log("Client disconnected: " + client.id + " for reason: " + reason);
     });
 });

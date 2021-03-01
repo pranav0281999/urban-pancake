@@ -1,14 +1,18 @@
 import * as THREE from './libs/three/three.module.js';
-import { OrbitControls } from './libs/three/jsm/OrbitControls.js';
-import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';
-import { Stats } from './libs/stats.module.js';
-import { CanvasUI } from './libs/CanvasUI.js'
-import { ARButton } from './libs/ARButton.js';
-import { LoadingBar } from './libs/LoadingBar.js';
-import { Player } from './libs/Player.js';
-import { ControllerGestures } from './libs/ControllerGestures.js';
+import {OrbitControls} from './libs/three/jsm/OrbitControls.js';
+import {GLTFLoader} from './libs/three/jsm/GLTFLoader.js';
+import {Stats} from './libs/stats.module.js';
+import {CanvasUI} from './libs/CanvasUI.js'
+import {ARButton} from './libs/ARButton.js';
+import {LoadingBar} from './libs/LoadingBar.js';
+import {Player} from './libs/Player.js';
+import {ControllerGestures} from './libs/ControllerGestures.js';
 
 class App {
+    function
+    function
+    function
+
     constructor() {
         const container = document.createElement('div');
         document.body.appendChild(container);
@@ -27,7 +31,7 @@ class App {
         light.position.set(1, 1, 1).normalize();
         this.scene.add(light);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -50,27 +54,100 @@ class App {
 
         window.addEventListener('resize', this.resize.bind(this));
 
+        this.objects = [];
+
+        this.setupSocket();
+    }
+
+    createConeMesh(radiusTop, height, material) {
+        return new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
+    }
+
+    creatArrowHelper(length) {
+        let object3D = new THREE.Object3D();
+
+        const dir = new THREE.Vector3(0, -1, 0);
+
+        dir.normalize();
+
+        const origin = new THREE.Vector3(0, 0.5, 0);
+        const hex = 0xffff00;
+
+        let arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex, length * 0.2, length * 0.2);
+
+        object3D.add(arrowHelper);
+
+        return object3D;
+    }
+
+    createArrowMesh(length, material) {
+        let cone = new THREE.Mesh(
+            new THREE.CylinderGeometry(length * 0.1, 0, length * 0.2, 5, 1),
+            material
+        );
+
+        let line = new THREE.Mesh(
+            new THREE.CylinderGeometry(length * 0.01, length * 0.01, length - length * 0.2, 5, 2),
+            material
+        );
+
+        cone.position.set(0, -(length - length * 0.2) / 2, 0);
+        line.position.set(0, length * 0.1, 0);
+
+        let object3D = new THREE.Object3D();
+        object3D.add(cone);
+        object3D.add(line);
+
+        return object3D;
+    }
+
+    setupSocket = () => {
         this.socket = io();
 
         this.socket.on("connect", () => {
             console.log("Connected to socket");
         });
 
-        this.socket.on("update", (data) => {
-            if (this.GeoMesh) {
-                const position = this.GeoMesh.position.clone();
-                this.GeoMesh.position.set(
-                    position.x + data.positionAddition[0],
-                    position.y + data.positionAddition[1],
-                    position.z + data.positionAddition[2]
-                );
+        this.socket.on("object_create", (data) => {
+            switch (data.type) {
+                case "cone":
+                    let cone = this.createConeMesh(0.03, 0.06, new THREE.MeshNormalMaterial());
+                    cone.userData.id = data.objectUUID;
+
+                    this.scene.add(cone);
+
+                    this.objects.push(cone);
+
+                    break;
+                case "arrow":
+                    break;
+                default:
+                    break;
             }
+        });
+
+        this.socket.on("object_transform", (data) => {
+            const index = this.objects.findIndex((object) => {
+                return object.userData.id === data.objectUUID;
+            });
+
+            this.objects[index].position.set(data.position.x, data.position.y, data.position.z);
+        });
+
+        this.socket.on("object_delete", (data) => {
+            const index = this.objects.findIndex((object) => {
+                return object.userData.id === data.objectUUID;
+            });
+
+            this.scene.remove(this.objects[index]);
+
+            this.objects.splice(index, 1);
         });
     }
 
     initScene() {
         const geometry = new THREE.BoxBufferGeometry(0.06, 0.06, 0.06);
-        const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
+        const material = new THREE.MeshPhongMaterial({color: 0xffffff * Math.random()});
         this.GeoMesh = new THREE.Mesh(geometry, material);
         this.GeoMesh.visible = false;
         this.loadingBar = new LoadingBar();
@@ -133,9 +210,9 @@ class App {
     createUI() {
 
         const config = {
-            panelSize: { width: 0.15, height: 0.038 },
+            panelSize: {width: 0.15, height: 0.038},
             height: 128,
-            info: { type: "text" },
+            info: {type: "text"},
         }
         const content = {
             info: "Debug info",
@@ -161,11 +238,11 @@ class App {
             self.camera.remove(self.ui.mesh);
         }
 
-        const btn = new ARButton(this.renderer, { onSessionStart, onSessionEnd });//, sessionInit: { optionalFeatures: [ 'dom-overlay' ], domOverlay: { root: document.body } } } );
+        const btn = new ARButton(this.renderer, {onSessionStart, onSessionEnd});//, sessionInit: { optionalFeatures: [ 'dom-overlay' ], domOverlay: { root: document.body } } } );
 
         this.gestures = new ControllerGestures(this.renderer);
         this.gestures.addEventListener('tap', (ev) => {
-            //console.log( 'tap' ); 
+            //console.log( 'tap' );
 
             self.ui.updateElement('info', 'tap');
             if (!self.GeoMesh.visible) {
@@ -175,11 +252,11 @@ class App {
             }
         });
         this.gestures.addEventListener('doubletap', (ev) => {
-            //console.log( 'doubletap'); 
+            //console.log( 'doubletap');
             self.ui.updateElement('info', 'doubletap');
         });
         this.gestures.addEventListener('press', (ev) => {
-            //console.log( 'press' );    
+            //console.log( 'press' );
             self.ui.updateElement('info', 'press');
         });
         this.gestures.addEventListener('pan', (ev) => {
@@ -193,7 +270,7 @@ class App {
             }
         });
         this.gestures.addEventListener('swipe', (ev) => {
-            //console.log( ev );   
+            //console.log( ev );
             self.ui.updateElement('info', `swipe ${ev.direction}`);
             if (self.GeoMesh.visible) {
                 self.GeoMesh.visible = false;
@@ -201,7 +278,7 @@ class App {
             }
         });
         this.gestures.addEventListener('pinch', (ev) => {
-            //console.log( ev );  
+            //console.log( ev );
             if (ev.initialise !== undefined) {
                 self.startScale = self.knight.object.scale.clone();
             } else {
@@ -211,7 +288,7 @@ class App {
             }
         });
         this.gestures.addEventListener('rotate', (ev) => {
-            //      sconsole.log( ev ); 
+            //      sconsole.log( ev );
             if (ev.initialise !== undefined) {
                 self.startQuaternion = self.knight.object.quaternion.clone();
             } else {
@@ -242,4 +319,4 @@ class App {
     }
 }
 
-export { App };
+export {App};
