@@ -9,10 +9,6 @@ import {Player} from './libs/Player.js';
 import {ControllerGestures} from './libs/ControllerGestures.js';
 
 class App {
-    function
-    function
-    function
-
     constructor() {
         const container = document.createElement('div');
         document.body.appendChild(container);
@@ -63,23 +59,6 @@ class App {
         return new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
     }
 
-    creatArrowHelper(length) {
-        let object3D = new THREE.Object3D();
-
-        const dir = new THREE.Vector3(0, -1, 0);
-
-        dir.normalize();
-
-        const origin = new THREE.Vector3(0, 0.5, 0);
-        const hex = 0xffff00;
-
-        let arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex, length * 0.2, length * 0.2);
-
-        object3D.add(arrowHelper);
-
-        return object3D;
-    }
-
     createArrowMesh(length, material) {
         let cone = new THREE.Mesh(
             new THREE.CylinderGeometry(length * 0.1, 0, length * 0.2, 5, 1),
@@ -113,6 +92,7 @@ class App {
                 case "cone":
                     let cone = this.createConeMesh(0.03, 0.06, new THREE.MeshNormalMaterial());
                     cone.userData.id = data.objectUUID;
+                    cone.position.set(0, 0, -0.5);
 
                     this.scene.add(cone);
 
@@ -120,6 +100,14 @@ class App {
 
                     break;
                 case "arrow":
+                    let arrow = this.createArrowMesh(0.06, new THREE.MeshNormalMaterial());
+                    arrow.userData.id = data.objectUUID;
+                    arrow.position.set(0, 0, -0.5);
+
+                    this.scene.add(arrow);
+
+                    this.objects.push(arrow);
+
                     break;
                 default:
                     break;

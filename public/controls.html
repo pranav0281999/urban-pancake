@@ -1,4 +1,41 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - drag controls</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" name="viewport">
+    <style>
+        body {
+            background-color: #f0f0f0;
+            color: #444;
+            margin: 0;
+        }
+
+        a {
+            color: #08f;
+        }
+
+        #options {
+            height: 10%;
+            width: 5%;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div style="display: flex; flex-direction: row">
+    <canvas id="canvas"></canvas>
+    <div id="options">
+        <button id="add_cone">Add Cone</button>
+        <button id="add_arrow">Add Arrow</button>
+        <button id="remove_object">Remove</button>
+    </div>
+</div>
+
 <script src="build/controls.bundle.js" type="module"></script>
 
+</body>
 </html>
