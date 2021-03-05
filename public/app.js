@@ -15,7 +15,7 @@ class App {
 
         this.clock = new THREE.Clock();
 
-        this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 20);
+        this.camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 20);
 
         this.scene = new THREE.Scene();
 
@@ -35,7 +35,7 @@ class App {
         container.appendChild(this.renderer.domElement);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.target.set(0, 3.5, 0);
+        this.controls.target.set(0, 0, 0);
         this.controls.update();
 
         this.stats = new Stats();
@@ -53,6 +53,10 @@ class App {
         this.objects = [];
 
         this.setupSocket();
+
+        this.imageCapture = null;
+
+        // this.takeSnapshot();
     }
 
     createConeMesh(radiusTop, height, material) {
@@ -90,9 +94,9 @@ class App {
         this.socket.on("object_create", (data) => {
             switch (data.type) {
                 case "cone":
-                    let cone = this.createConeMesh(0.03, 0.06, new THREE.MeshNormalMaterial());
+                    let cone = this.createConeMesh(0.05, 0.1, new THREE.MeshNormalMaterial());
                     cone.userData.id = data.objectUUID;
-                    cone.position.set(0, 0, -0.5);
+                    cone.position.set(0, 0, -1);
 
                     this.scene.add(cone);
 
@@ -133,11 +137,84 @@ class App {
         });
     }
 
+    takeSnapshot = () => {
+        if (!this.imageCapture) {
+            let deviceId;
+            navigator.mediaDevices.enumerateDevices()
+                .then((devices) => {
+                    devices.forEach((device) => {
+                        console.log(device.kind + ": " + device.label +
+                            " id = " + device.deviceId);
+
+                        if (device.label.includes("back")) {
+                            deviceId = device.deviceId;
+                        }
+                    });
+
+                    navigator.mediaDevices.getUserMedia({
+                        video: {deviceId: deviceId},
+                    })
+                        .then(mediaStream => {
+                            this.imageCapture = new ImageCapture(mediaStream.getVideoTracks()[0]);
+
+                            this.imageCapture.takePhoto()
+                                .then((blob) => {
+                                    console.log('Grabbed frame:', blob);
+
+                                    this.sendSnapshot(blob);
+                                })
+                                .catch((error) => {
+                                    console.log('grabFrame() error: ', error);
+                                });
+                        })
+                        .catch(error => {
+                            console.log(error);
+                        });
+                })
+                .catch(function (err) {
+                    console.log(err.name + ": " + err.message);
+                });
+        } else {
+            this.imageCapture.takePhoto()
+                .then((blob) => {
+                    console.log('Grabbed frame:', blob);
+
+                    this.sendSnapshot(blob);
+                })
+                .catch((error) => {
+                    console.log('grabFrame() error: ', error);
+                });
+        }
+    }
+
+    sendSnapshot = (imageBlob) => {
+        const formData = new FormData();
+        formData.append('image', imageBlob);
+
+        axios.post(
+            'https://api.imgbb.com/1/upload?key=b1ba8b0815281974e7eab5c25da03446&expiration=60',
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }
+        ).then(response => {
+            console.log("Snapshot sent: ", response);
+
+            this.socket.emit("image", {
+                url: response.data.data.url
+            });
+        }).catch(err => {
+            console.log("Couldn't send snapshot: ", err);
+        });
+    }
+
     initScene() {
-        const geometry = new THREE.BoxBufferGeometry(0.06, 0.06, 0.06);
-        const material = new THREE.MeshPhongMaterial({color: 0xffffff * Math.random()});
-        this.GeoMesh = new THREE.Mesh(geometry, material);
-        this.GeoMesh.visible = false;
+        // const geometry = new THREE.BoxBufferGeometry(1, 1, 1);
+        // const material = new THREE.MeshPhongMaterial({color: 0xffffff * Math.random()});
+        // this.GeoMesh = new THREE.AxisHelper(1);
+        // this.GeoMesh.visible = false;
         this.loadingBar = new LoadingBar();
 
         this.assetsPath = './assets/';
@@ -201,9 +278,10 @@ class App {
             panelSize: {width: 0.15, height: 0.038},
             height: 128,
             info: {type: "text"},
+            renderer: this.renderer
         }
         const content = {
-            info: "Debug info",
+            info: "Debug info"
         }
 
         const ui = new CanvasUI(content, config);
@@ -217,12 +295,12 @@ class App {
         const self = this;
         let controller, controller1;
 
-        function onSessionStart() {
+        let onSessionStart = () => {
             self.ui.mesh.position.set(0, -0.15, -0.3);
             self.camera.add(self.ui.mesh);
         }
 
-        function onSessionEnd() {
+        let onSessionEnd = () => {
             self.camera.remove(self.ui.mesh);
         }
 
@@ -233,11 +311,11 @@ class App {
             //console.log( 'tap' );
 
             self.ui.updateElement('info', 'tap');
-            if (!self.GeoMesh.visible) {
-                self.GeoMesh.visible = true;
-                self.GeoMesh.position.set(0, -0.3, -0.5).add(ev.position);
-                self.scene.add(self.GeoMesh);
-            }
+            // if (!self.GeoMesh.visible) {
+            //     self.GeoMesh.visible = true;
+            //     self.GeoMesh.position.set(0, 0, -1).add(ev.position);
+            //     self.scene.add(self.GeoMesh);
+            // }
         });
         this.gestures.addEventListener('doubletap', (ev) => {
             //console.log( 'doubletap');
@@ -249,21 +327,21 @@ class App {
         });
         this.gestures.addEventListener('pan', (ev) => {
             //console.log( ev );
-            if (ev.initialise !== undefined) {
-                self.startPosition = self.GeoMesh.position.clone();
-            } else {
-                const pos = self.startPosition.clone().add(ev.delta.multiplyScalar(3));
-                self.GeoMesh.position.copy(pos);
-                self.ui.updateElement('info', `pan x:${ev.delta.x.toFixed(3)}, y:${ev.delta.y.toFixed(3)}, x:${ev.delta.z.toFixed(3)}`);
-            }
+            // if (ev.initialise !== undefined) {
+            //     self.startPosition = self.GeoMesh.position.clone();
+            // } else {
+            //     const pos = self.startPosition.clone().add(ev.delta.multiplyScalar(3));
+            //     self.GeoMesh.position.copy(pos);
+            //     self.ui.updateElement('info', `pan x:${ev.delta.x.toFixed(3)}, y:${ev.delta.y.toFixed(3)}, x:${ev.delta.z.toFixed(3)}`);
+            // }
         });
         this.gestures.addEventListener('swipe', (ev) => {
             //console.log( ev );
             self.ui.updateElement('info', `swipe ${ev.direction}`);
-            if (self.GeoMesh.visible) {
-                self.GeoMesh.visible = false;
-                self.scene.remove(self.GeoMesh);
-            }
+            // if (self.GeoMesh.visible) {
+            //     self.GeoMesh.visible = false;
+            //     self.scene.remove(self.GeoMesh);
+            // }
         });
         this.gestures.addEventListener('pinch', (ev) => {
             //console.log( ev );

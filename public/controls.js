@@ -1,6 +1,6 @@
 import * as THREE from './libs/three/three.module.js';
 import {DragControls} from './libs/three/jsm/DragControls.js';
-import { io } from "socket.io-client";
+import {io} from "socket.io-client";
 
 let canvas;
 let camera, scene, renderer;
@@ -17,33 +17,24 @@ removeButton.addEventListener("click", removeObject);
 
 const objects = [];
 
-const mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
-
 init();
 
 function init() {
 
     canvas = document.getElementById('canvas');
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 5000);
-    camera.position.z = 1000;
+    camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.01, 20);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
 
     scene.add(new THREE.AmbientLight(0x505050));
 
-    const light = new THREE.SpotLight(0xffffff, 1.5);
-    light.position.set(0, 500, 2000);
-    light.angle = Math.PI / 9;
-
-    light.castShadow = true;
-    light.shadow.camera.near = 1000;
-    light.shadow.camera.far = 4000;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
-
-    scene.add(light);
+    // light.castShadow = true;
+    // light.shadow.camera.near = 1000;
+    // light.shadow.camera.far = 4000;
+    // light.shadow.mapSize.width = 1024;
+    // light.shadow.mapSize.height = 1024;
 
     group = new THREE.Group();
     scene.add(group);
@@ -55,18 +46,35 @@ function init() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
 
+    const texture = new THREE.TextureLoader().load('assets/screenshot2.png',
+
+        // onLoad callback
+        function (texture) {
+            let planeGeo = new THREE.PlaneGeometry(2 * 0.428571429, 2, 2, 2);
+            let planeMat = new THREE.MeshBasicMaterial({map: texture});
+            let planeMesh = new THREE.Mesh(planeGeo, planeMat);
+            planeMesh.position.set(0, 0, -1.483);
+            scene.add(planeMesh);
+        },
+
+        // onProgress callback currently not supported
+        undefined,
+
+        // onError callback
+        function (err) {
+            console.error('An error happened.', err);
+        });
+
     controls = new DragControls([...objects], camera, renderer.domElement);
     controls.addEventListener('drag', render);
     controls.addEventListener('drag', sendPosition);
 
     window.addEventListener('resize', onWindowResize);
-
     document.addEventListener('click', onClick);
 
     render();
 
     setupSocket();
-
 }
 
 function setupSocket() {
@@ -74,6 +82,10 @@ function setupSocket() {
 
     socket.on("connect", () => {
         console.log("Connected to socket");
+
+        socket.on("image", data => {
+            console.log("image", data);
+        })
     });
 }
 
@@ -124,7 +136,9 @@ function removeFromDraggable(object) {
 }
 
 function addCone() {
-    let cone = createConeMesh(40, 80, new THREE.MeshNormalMaterial());
+    let cone = createConeMesh(0.05, 0.1, new THREE.MeshNormalMaterial());
+    cone.position.set(0, 0, -1);
+
     const uuid = uuidV4();
 
     cone.userData.id = uuid;
@@ -142,7 +156,9 @@ function addCone() {
 }
 
 function addArrow() {
-    let arrow = createArrowMesh(80, new THREE.MeshNormalMaterial());
+    let arrow = createArrowMesh(0.1, new THREE.MeshNormalMaterial());
+    arrow.position.set(0, 0, -1);
+
     const uuid = uuidV4();
 
     arrow.userData.id = uuid;
@@ -184,9 +200,9 @@ function onWindowResize() {
 function sendPosition(event) {
     socket.emit("object_transform", {
         position: {
-            x: event.object.position.x / 16666,
-            y: event.object.position.y / 16666,
-            z: -0.5
+            x: event.object.position.x,
+            y: event.object.position.y,
+            z: -1
         },
         objectUUID: event.object.userData.id
     });

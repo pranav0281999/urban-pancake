@@ -55,6 +55,11 @@ io.on("connection", client => {
         io.sockets.emit("object_delete", data);
     });
 
+    client.on("image", data => {
+        console.log("image", data);
+        io.sockets.emit("image", data);
+    });
+
     client.on("disconnect", (reason) => {
         console.log("Client disconnected: " + client.id + " for reason: " + reason);
     });
