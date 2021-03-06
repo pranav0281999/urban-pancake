@@ -159,138 +159,25 @@ class App {
         });
     }
 
-    // takeSnapshot = () => {
-    //     if (!this.imageCapture) {
-    //         let deviceId;
-    //         navigator.mediaDevices.enumerateDevices()
-    //             .then((devices) => {
-    //                 devices.forEach((device) => {
-    //                     console.log(device.kind + ": " + device.label +
-    //                         " id = " + device.deviceId);
-    //
-    //                     if (device.label.includes("back")) {
-    //                         deviceId = device.deviceId;
-    //                     }
-    //                 });
-    //
-    //                 navigator.mediaDevices.getUserMedia({
-    //                     video: {deviceId: deviceId},
-    //                 })
-    //                     .then(mediaStream => {
-    //                         this.imageCapture = new ImageCapture(mediaStream.getVideoTracks()[0]);
-    //
-    //                         this.imageCapture.takePhoto()
-    //                             .then((blob) => {
-    //                                 console.log('Grabbed frame:', blob);
-    //
-    //                                 this.sendSnapshot(blob);
-    //                             })
-    //                             .catch((error) => {
-    //                                 console.log('grabFrame() error: ', error);
-    //                             });
-    //                     })
-    //                     .catch(error => {
-    //                         console.log(error);
-    //                     });
-    //             })
-    //             .catch(function (err) {
-    //                 console.log(err.name + ": " + err.message);
-    //             });
-    //     } else {
-    //         this.imageCapture.takePhoto()
-    //             .then((blob) => {
-    //                 console.log('Grabbed frame:', blob);
-    //
-    //                 this.sendSnapshot(blob);
-    //             })
-    //             .catch((error) => {
-    //                 console.log('grabFrame() error: ', error);
-    //             });
-    //     }
-    // }
-    //
-    // sendSnapshot = (imageBlob) => {
-    //     const formData = new FormData();
-    //     formData.append('image', imageBlob);
-    //
-    //     axios.post(
-    //         'https://api.imgbb.com/1/upload?key=b1ba8b0815281974e7eab5c25da03446&expiration=60',
-    //         formData,
-    //         {
-    //             headers: {
-    //                 'Content-Type': 'multipart/form-data'
-    //             }
-    //         }
-    //     ).then(response => {
-    //         console.log("Snapshot sent: ", response);
-    //
-    //         this.socket.emit("image", {
-    //             url: response.data.data.url
-    //         });
-    //     }).catch(err => {
-    //         console.log("Couldn't send snapshot: ", err);
-    //     });
-    // }
+    getFOV = () => {
+        this.renderer.xr.getSession().requestReferenceSpace("viewer").then(referenceSpace => {
+            this.renderer.xr.getSession().requestAnimationFrame((time, frame) => {
+                let pose = frame.getViewerPose(referenceSpace);
+
+                if (pose.views.length > 0) {
+                    let p = pose.views[0];
+
+                    console.log(2.0 * Math.atan(1.0 / p.projectionMatrix[5]) * 180.0 / Math.PI);
+                }
+            });
+        });
+    }
 
     initScene() {
         // const geometry = new THREE.BoxBufferGeometry(1, 1, 1);
         // const material = new THREE.MeshPhongMaterial({color: 0xffffff * Math.random()});
         // this.GeoMesh = new THREE.AxisHelper(1);
         // this.GeoMesh.visible = false;
-        this.loadingBar = new LoadingBar();
-
-        this.assetsPath = './assets/';
-        const loader = new GLTFLoader().setPath(this.assetsPath);
-        const self = this;
-
-        // Load a GLTF resource
-        loader.load(
-            // resource URL
-            `knight2.glb`,
-            // called when the resource is loaded
-            function (gltf) {
-                const object = gltf.scene.children[5];
-
-                object.traverse(function (child) {
-                    if (child.isMesh) {
-                        child.material.metalness = 0;
-                        child.material.roughness = 1;
-                    }
-                });
-
-                const options = {
-                    object: object,
-                    speed: 0.5,
-                    animations: gltf.animations,
-                    clip: gltf.animations[0],
-                    app: self,
-                    name: 'knight',
-                    npc: false
-                };
-
-                self.knight = new Player(options);
-                self.knight.object.visible = false;
-
-                self.knight.action = 'Dance';
-                const scale = 0.003;
-                self.knight.object.scale.set(scale, scale, scale);
-
-                self.loadingBar.visible = false;
-            },
-            // called while loading is progressing
-            function (xhr) {
-
-                self.loadingBar.progress = (xhr.loaded / xhr.total);
-
-            },
-            // called when loading has errors
-            function (error) {
-
-                console.log('An error happened');
-
-            }
-        );
-
         this.createUI();
     }
 
@@ -315,11 +202,12 @@ class App {
         this.renderer.xr.enabled = true;
 
         const self = this;
-        let controller, controller1;
 
         let onSessionStart = () => {
             self.ui.mesh.position.set(0, -0.15, -0.3);
             self.camera.add(self.ui.mesh);
+
+            this.getFOV();
         }
 
         let onSessionEnd = () => {
