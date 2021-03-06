@@ -1,6 +1,7 @@
 import * as THREE from './libs/three/three.module.js';
 import {DragControls} from './libs/three/jsm/DragControls.js';
 import {io} from "socket.io-client";
+import SpriteText from './libs/Spritetext.js';
 
 let canvas;
 let camera, scene, renderer;
@@ -9,10 +10,13 @@ let socket;
 
 let addArrowButton = document.getElementById("add_arrow");
 let addConeButton = document.getElementById("add_cone");
+let addTextButton = document.getElementById("add_text");
+let textInput = document.getElementById("text_input_sprite");
 let removeButton = document.getElementById("remove_object");
 
 addArrowButton.addEventListener("click", addArrow);
 addConeButton.addEventListener("click", addCone);
+addTextButton.addEventListener("click", addText);
 removeButton.addEventListener("click", removeObject);
 
 const objects = [];
@@ -90,7 +94,11 @@ function setupSocket() {
 }
 
 function createConeMesh(radiusTop, height, material) {
-    return new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
+    let cone = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
+
+    cone.userData.type = "cone";
+
+    return cone;
 }
 
 function createArrowMesh(length, material) {
@@ -111,7 +119,20 @@ function createArrowMesh(length, material) {
     object3D.add(cone);
     object3D.add(line);
 
+    object3D.userData.type = "cone";
+
     return object3D;
+}
+
+function createText(text, textHeight, color) {
+    let spriteText = new SpriteText(text, textHeight, color);
+    spriteText.backgroundColor = "white";
+    // spriteText.borderWidth = 0.01;
+    // spriteText.borderColor = color;
+
+    spriteText.userData.type = "text";
+
+    return spriteText;
 }
 
 function uuidV4() {
@@ -137,6 +158,7 @@ function removeFromDraggable(object) {
 
 function addCone() {
     let cone = createConeMesh(0.05, 0.1, new THREE.MeshNormalMaterial());
+    // let cone = createText("Hello World", 0.03, "red");
     cone.position.set(0, 0, -1);
 
     const uuid = uuidV4();
@@ -153,6 +175,32 @@ function addCone() {
         type: "cone",
         objectUUID: uuid
     });
+}
+
+function addText() {
+    const text = textInput.value.trim();
+    if (text !== "") {
+        let spriteText = createText(text, 0.03, "red");
+        spriteText.position.set(0, 0, -1);
+
+        const uuid = uuidV4();
+
+        spriteText.userData.id = uuid;
+
+        scene.add(spriteText);
+
+        objects.push(spriteText);
+
+        addToDraggable(spriteText);
+
+        socket.emit("object_create", {
+            type: "text",
+            text: text,
+            objectUUID: uuid
+        });
+
+        textInput.value = "";
+    }
 }
 
 function addArrow() {

@@ -7,6 +7,7 @@ import {ARButton} from './libs/ARButton.js';
 import {LoadingBar} from './libs/LoadingBar.js';
 import {Player} from './libs/Player.js';
 import {ControllerGestures} from './libs/ControllerGestures.js';
+import SpriteText from './libs/Spritetext.js';
 
 class App {
     constructor() {
@@ -84,6 +85,17 @@ class App {
         return object3D;
     }
 
+    createText = (text, textHeight, color) => {
+        let spriteText = new SpriteText(text, textHeight, color);
+        spriteText.backgroundColor = "white";
+        // spriteText.borderWidth = 0.01;
+        // spriteText.borderColor = color;
+
+        spriteText.userData.type = "text";
+
+        return spriteText;
+    }
+
     setupSocket = () => {
         this.socket = io();
 
@@ -106,11 +118,21 @@ class App {
                 case "arrow":
                     let arrow = this.createArrowMesh(0.06, new THREE.MeshNormalMaterial());
                     arrow.userData.id = data.objectUUID;
-                    arrow.position.set(0, 0, -0.5);
+                    arrow.position.set(0, 0, -1);
 
                     this.scene.add(arrow);
 
                     this.objects.push(arrow);
+
+                    break;
+                case "text":
+                    let text = this.createText(data.text, 0.03, "red");
+                    text.userData.id = data.objectUUID;
+                    text.position.set(0, 0, -1);
+
+                    this.scene.add(text);
+
+                    this.objects.push(text);
 
                     break;
                 default:
@@ -137,78 +159,78 @@ class App {
         });
     }
 
-    takeSnapshot = () => {
-        if (!this.imageCapture) {
-            let deviceId;
-            navigator.mediaDevices.enumerateDevices()
-                .then((devices) => {
-                    devices.forEach((device) => {
-                        console.log(device.kind + ": " + device.label +
-                            " id = " + device.deviceId);
-
-                        if (device.label.includes("back")) {
-                            deviceId = device.deviceId;
-                        }
-                    });
-
-                    navigator.mediaDevices.getUserMedia({
-                        video: {deviceId: deviceId},
-                    })
-                        .then(mediaStream => {
-                            this.imageCapture = new ImageCapture(mediaStream.getVideoTracks()[0]);
-
-                            this.imageCapture.takePhoto()
-                                .then((blob) => {
-                                    console.log('Grabbed frame:', blob);
-
-                                    this.sendSnapshot(blob);
-                                })
-                                .catch((error) => {
-                                    console.log('grabFrame() error: ', error);
-                                });
-                        })
-                        .catch(error => {
-                            console.log(error);
-                        });
-                })
-                .catch(function (err) {
-                    console.log(err.name + ": " + err.message);
-                });
-        } else {
-            this.imageCapture.takePhoto()
-                .then((blob) => {
-                    console.log('Grabbed frame:', blob);
-
-                    this.sendSnapshot(blob);
-                })
-                .catch((error) => {
-                    console.log('grabFrame() error: ', error);
-                });
-        }
-    }
-
-    sendSnapshot = (imageBlob) => {
-        const formData = new FormData();
-        formData.append('image', imageBlob);
-
-        axios.post(
-            'https://api.imgbb.com/1/upload?key=b1ba8b0815281974e7eab5c25da03446&expiration=60',
-            formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            }
-        ).then(response => {
-            console.log("Snapshot sent: ", response);
-
-            this.socket.emit("image", {
-                url: response.data.data.url
-            });
-        }).catch(err => {
-            console.log("Couldn't send snapshot: ", err);
-        });
-    }
+    // takeSnapshot = () => {
+    //     if (!this.imageCapture) {
+    //         let deviceId;
+    //         navigator.mediaDevices.enumerateDevices()
+    //             .then((devices) => {
+    //                 devices.forEach((device) => {
+    //                     console.log(device.kind + ": " + device.label +
+    //                         " id = " + device.deviceId);
+    //
+    //                     if (device.label.includes("back")) {
+    //                         deviceId = device.deviceId;
+    //                     }
+    //                 });
+    //
+    //                 navigator.mediaDevices.getUserMedia({
+    //                     video: {deviceId: deviceId},
+    //                 })
+    //                     .then(mediaStream => {
+    //                         this.imageCapture = new ImageCapture(mediaStream.getVideoTracks()[0]);
+    //
+    //                         this.imageCapture.takePhoto()
+    //                             .then((blob) => {
+    //                                 console.log('Grabbed frame:', blob);
+    //
+    //                                 this.sendSnapshot(blob);
+    //                             })
+    //                             .catch((error) => {
+    //                                 console.log('grabFrame() error: ', error);
+    //                             });
+    //                     })
+    //                     .catch(error => {
+    //                         console.log(error);
+    //                     });
+    //             })
+    //             .catch(function (err) {
+    //                 console.log(err.name + ": " + err.message);
+    //             });
+    //     } else {
+    //         this.imageCapture.takePhoto()
+    //             .then((blob) => {
+    //                 console.log('Grabbed frame:', blob);
+    //
+    //                 this.sendSnapshot(blob);
+    //             })
+    //             .catch((error) => {
+    //                 console.log('grabFrame() error: ', error);
+    //             });
+    //     }
+    // }
+    //
+    // sendSnapshot = (imageBlob) => {
+    //     const formData = new FormData();
+    //     formData.append('image', imageBlob);
+    //
+    //     axios.post(
+    //         'https://api.imgbb.com/1/upload?key=b1ba8b0815281974e7eab5c25da03446&expiration=60',
+    //         formData,
+    //         {
+    //             headers: {
+    //                 'Content-Type': 'multipart/form-data'
+    //             }
+    //         }
+    //     ).then(response => {
+    //         console.log("Snapshot sent: ", response);
+    //
+    //         this.socket.emit("image", {
+    //             url: response.data.data.url
+    //         });
+    //     }).catch(err => {
+    //         console.log("Couldn't send snapshot: ", err);
+    //     });
+    // }
 
     initScene() {
         // const geometry = new THREE.BoxBufferGeometry(1, 1, 1);
