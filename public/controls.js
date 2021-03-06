@@ -50,11 +50,13 @@ function init() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
 
-    const texture = new THREE.TextureLoader().load('assets/screenshot2.png',
+    const texture = new THREE.TextureLoader().load('assets/image.jpg',
 
         // onLoad callback
         function (texture) {
-            let planeGeo = new THREE.PlaneGeometry(2 * 0.428571429, 2, 2, 2);
+            let ratio = texture.image.width / texture.image.height;
+
+            let planeGeo = new THREE.PlaneGeometry(2 * ratio, 2, 2, 2);
             let planeMat = new THREE.MeshBasicMaterial({map: texture});
             let planeMesh = new THREE.Mesh(planeGeo, planeMat);
             planeMesh.position.set(0, 0, -1.483);
@@ -89,6 +91,10 @@ function setupSocket() {
 
         socket.on("image", data => {
             console.log("image", data);
+        })
+
+        socket.on("fov", data => {
+            console.log("fov", data);
         })
     });
 }

@@ -60,6 +60,11 @@ io.on("connection", client => {
         io.sockets.emit("image", data);
     });
 
+    client.on("fov", data => {
+        console.log("fov", data);
+        io.sockets.emit("fov", data);
+    });
+
     client.on("disconnect", (reason) => {
         console.log("Client disconnected: " + client.id + " for reason: " + reason);
     });

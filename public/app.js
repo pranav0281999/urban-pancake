@@ -167,7 +167,11 @@ class App {
                 if (pose.views.length > 0) {
                     let p = pose.views[0];
 
-                    console.log(2.0 * Math.atan(1.0 / p.projectionMatrix[5]) * 180.0 / Math.PI);
+                    const fov = 2.0 * Math.atan(1.0 / p.projectionMatrix[5]) * 180.0 / Math.PI;
+
+                    this.socket.emit("fov", {
+                        fov: fov
+                    });
                 }
             });
         });
