@@ -259,23 +259,23 @@ class App {
         });
         this.gestures.addEventListener('pinch', (ev) => {
             //console.log( ev );
-            if (ev.initialise !== undefined) {
-                self.startScale = self.knight.object.scale.clone();
-            } else {
-                const scale = self.startScale.clone().multiplyScalar(ev.scale);
-                self.knight.object.scale.copy(scale);
-                self.ui.updateElement('info', `pinch delta:${ev.delta.toFixed(3)} scale:${ev.scale.toFixed(2)}`);
-            }
+            // if (ev.initialise !== undefined) {
+            //     self.startScale = self.knight.object.scale.clone();
+            // } else {
+            //     const scale = self.startScale.clone().multiplyScalar(ev.scale);
+            //     self.knight.object.scale.copy(scale);
+            //     self.ui.updateElement('info', `pinch delta:${ev.delta.toFixed(3)} scale:${ev.scale.toFixed(2)}`);
+            // }
         });
         this.gestures.addEventListener('rotate', (ev) => {
             //      sconsole.log( ev );
-            if (ev.initialise !== undefined) {
-                self.startQuaternion = self.knight.object.quaternion.clone();
-            } else {
-                self.knight.object.quaternion.copy(self.startQuaternion);
-                self.knight.object.rotateY(ev.theta);
-                self.ui.updateElement('info', `rotate ${ev.theta.toFixed(3)}`);
-            }
+            // if (ev.initialise !== undefined) {
+            //     self.startQuaternion = self.knight.object.quaternion.clone();
+            // } else {
+            //     self.knight.object.quaternion.copy(self.startQuaternion);
+            //     self.knight.object.rotateY(ev.theta);
+            //     self.ui.updateElement('info', `rotate ${ev.theta.toFixed(3)}`);
+            // }
         });
 
         this.renderer.setAnimationLoop(this.render.bind(this));
@@ -294,7 +294,7 @@ class App {
             this.gestures.update();
             this.ui.update();
         }
-        if (this.knight !== undefined) this.knight.update(dt);
+        // if (this.knight !== undefined) this.knight.update(dt);
         this.renderer.render(this.scene, this.camera);
     }
 }

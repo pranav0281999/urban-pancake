@@ -7,6 +7,7 @@ let canvas;
 let camera, scene, renderer;
 let controls, group;
 let socket;
+let planeMesh;
 
 let addArrowButton = document.getElementById("add_arrow");
 let addConeButton = document.getElementById("add_cone");
@@ -27,7 +28,7 @@ function init() {
 
     canvas = document.getElementById('canvas');
 
-    camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.01, 20);
+    camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 20);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
@@ -53,14 +54,16 @@ function init() {
     const texture = new THREE.TextureLoader().load('assets/image.jpg',
 
         // onLoad callback
-        function (texture) {
+        (texture) => {
             let ratio = texture.image.width / texture.image.height;
 
             let planeGeo = new THREE.PlaneGeometry(2 * ratio, 2, 2, 2);
             let planeMat = new THREE.MeshBasicMaterial({map: texture});
-            let planeMesh = new THREE.Mesh(planeGeo, planeMat);
-            planeMesh.position.set(0, 0, -1.483);
+            planeMesh = new THREE.Mesh(planeGeo, planeMat);
+            planeMesh.position.set(0, 0, -Math.tan(45 * Math.PI / 180));
             scene.add(planeMesh);
+
+            render();
         },
 
         // onProgress callback currently not supported
@@ -95,6 +98,13 @@ function setupSocket() {
 
         socket.on("fov", data => {
             console.log("fov", data);
+
+            camera.fov = data.fov;
+            camera.updateProjectionMatrix();
+
+            planeMesh.position.set(0, 0, -Math.tan((90 - data.fov / 2) * Math.PI / 180));
+
+            render();
         })
     });
 }

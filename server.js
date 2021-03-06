@@ -60,6 +60,12 @@ io.on("connection", client => {
         io.sockets.emit("image", data);
     });
 
+    /**
+     * data format:
+     * {
+     * fov: Number
+     * }
+     * */
     client.on("fov", data => {
         console.log("fov", data);
         io.sockets.emit("fov", data);
