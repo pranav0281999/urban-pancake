@@ -8,8 +8,11 @@ import {LoadingBar} from './libs/LoadingBar.js';
 import {Player} from './libs/Player.js';
 import {ControllerGestures} from './libs/ControllerGestures.js';
 import SpriteText from './libs/Spritetext.js';
+import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
 
 class App {
+    function
+
     constructor() {
         const container = document.createElement('div');
         document.body.appendChild(container);
@@ -65,24 +68,20 @@ class App {
     }
 
     createArrowMesh(length, material) {
-        let cone = new THREE.Mesh(
-            new THREE.CylinderGeometry(length * 0.1, 0, length * 0.2, 5, 1),
-            material
-        );
+        let coneGeometry = new THREE.CylinderBufferGeometry(length * 0.1, 0, length * 0.2, 5, 1);
 
-        let line = new THREE.Mesh(
-            new THREE.CylinderGeometry(length * 0.01, length * 0.01, length - length * 0.2, 5, 2),
-            material
-        );
+        let lineGeometry = new THREE.CylinderBufferGeometry(length * 0.01, length * 0.01, length * 0.8, 5, 2);
 
-        cone.position.set(0, -(length - length * 0.2) / 2, 0);
-        line.position.set(0, length * 0.1, 0);
+        coneGeometry.translate(0, -(length * 0.8) / 2, 0);
+        lineGeometry.translate(0, length * 0.1, 0);
 
-        let object3D = new THREE.Object3D();
-        object3D.add(cone);
-        object3D.add(line);
+        let object = BufferGeometryUtils.mergeBufferGeometries([coneGeometry, lineGeometry], false);
 
-        return object3D;
+        let arrow = new THREE.Mesh(object, material);
+
+        arrow.userData.type = "arrow";
+
+        return arrow;
     }
 
     createText = (text, textHeight, color) => {
@@ -116,7 +115,7 @@ class App {
 
                     break;
                 case "arrow":
-                    let arrow = this.createArrowMesh(0.06, new THREE.MeshNormalMaterial());
+                    let arrow = this.createArrowMesh(0.1, new THREE.MeshNormalMaterial());
                     arrow.userData.id = data.objectUUID;
                     arrow.position.set(0, 0, -1);
 

@@ -2,6 +2,7 @@ import * as THREE from './libs/three/three.module.js';
 import {DragControls} from './libs/three/jsm/DragControls.js';
 import {io} from "socket.io-client";
 import SpriteText from './libs/Spritetext.js';
+import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
 
 let canvas;
 let camera, scene, renderer;
@@ -118,26 +119,20 @@ function createConeMesh(radiusTop, height, material) {
 }
 
 function createArrowMesh(length, material) {
-    let cone = new THREE.Mesh(
-        new THREE.CylinderGeometry(length * 0.1, 0, length * 0.2, 5, 1),
-        material
-    );
+    let coneGeometry = new THREE.CylinderBufferGeometry(length * 0.1, 0, length * 0.2, 5, 1);
 
-    let line = new THREE.Mesh(
-        new THREE.CylinderGeometry(length * 0.01, length * 0.01, length - length * 0.2, 5, 2),
-        material
-    );
+    let lineGeometry = new THREE.CylinderBufferGeometry(length * 0.01, length * 0.01, length * 0.8, 5, 2);
 
-    cone.position.set(0, -(length - length * 0.2) / 2, 0);
-    line.position.set(0, length * 0.1, 0);
+    coneGeometry.translate(0, -(length * 0.8) / 2, 0);
+    lineGeometry.translate(0, length * 0.1, 0);
 
-    let object3D = new THREE.Object3D();
-    object3D.add(cone);
-    object3D.add(line);
+    let object = BufferGeometryUtils.mergeBufferGeometries([coneGeometry, lineGeometry], false);
 
-    object3D.userData.type = "cone";
+    let arrow = new THREE.Mesh(object, material);
 
-    return object3D;
+    arrow.userData.type = "arrow";
+
+    return arrow;
 }
 
 function createText(text, textHeight, color) {
