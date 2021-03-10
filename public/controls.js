@@ -12,12 +12,14 @@ let planeMesh;
 
 let addArrowButton = document.getElementById("add_arrow");
 let addConeButton = document.getElementById("add_cone");
+let addCustomShapeButton = document.getElementById("add_custom_shape");
 let addTextButton = document.getElementById("add_text");
 let textInput = document.getElementById("text_input_sprite");
 let removeButton = document.getElementById("remove_object");
 
 addArrowButton.addEventListener("click", addArrow);
 addConeButton.addEventListener("click", addCone);
+addCustomShapeButton.addEventListener("click", addCustomShape);
 addTextButton.addEventListener("click", addText);
 removeButton.addEventListener("click", removeObject);
 
@@ -116,6 +118,21 @@ function createConeMesh(radiusTop, height, material) {
     cone.userData.type = "cone";
 
     return cone;
+}
+
+function createCustomShape(points, material) {
+    const cylinerGeo = [];
+    for (let j = 0; j < points.length; j += 1) {
+        let mesh = new THREE.SphereBufferGeometry(0.01, 5, 5);
+        mesh.translate(points[j].x, points[j].y, points[j].z);
+        cylinerGeo.push(mesh);
+    }
+
+    let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeo, false);
+
+    let arrow = new THREE.Mesh(object, material);
+
+    return arrow;
 }
 
 function createArrowMesh(length, material) {
@@ -231,6 +248,32 @@ function addArrow() {
     socket.emit("object_create", {
         type: "arrow",
         objectUUID: uuid
+    });
+}
+
+function addCustomShape() {
+    const points = [];
+    for (let j = 0; j < Math.PI; j += (0.5 * Math.PI) / 100) {
+        points.push(new THREE.Vector3(Math.cos(j), Math.sin(j), 0));
+    }
+
+    let customShape = createCustomShape(points, new THREE.MeshNormalMaterial());
+    customShape.position.set(0, 0, -1);
+
+    const uuid = uuidV4();
+
+    customShape.userData.id = uuid;
+
+    scene.add(customShape);
+
+    objects.push(customShape);
+
+    addToDraggable(customShape);
+
+    socket.emit("object_create", {
+        type: "custom",
+        objectUUID: uuid,
+        points: points
     });
 }
 

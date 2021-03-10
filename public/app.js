@@ -1,11 +1,8 @@
 import * as THREE from './libs/three/three.module.js';
 import {OrbitControls} from './libs/three/jsm/OrbitControls.js';
-import {GLTFLoader} from './libs/three/jsm/GLTFLoader.js';
 import {Stats} from './libs/stats.module.js';
 import {CanvasUI} from './libs/CanvasUI.js'
 import {ARButton} from './libs/ARButton.js';
-import {LoadingBar} from './libs/LoadingBar.js';
-import {Player} from './libs/Player.js';
 import {ControllerGestures} from './libs/ControllerGestures.js';
 import SpriteText from './libs/Spritetext.js';
 import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
@@ -65,6 +62,21 @@ class App {
 
     createConeMesh(radiusTop, height, material) {
         return new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
+    }
+
+    createCustomShape = (points, material) => {
+        const cylinerGeo = [];
+        for (let j = 0; j < points.length; j += 1) {
+            let mesh = new THREE.SphereBufferGeometry(0.01, 5, 5);
+            mesh.translate(points[j].x, points[j].y, points[j].z);
+            cylinerGeo.push(mesh);
+        }
+
+        let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeo, false);
+
+        let arrow = new THREE.Mesh(object, material);
+
+        return arrow;
     }
 
     createArrowMesh(length, material) {
@@ -132,6 +144,16 @@ class App {
                     this.scene.add(text);
 
                     this.objects.push(text);
+
+                    break;
+                case "custom":
+                    let customShape = this.createCustomShape(data.points, new THREE.MeshNormalMaterial());
+                    customShape.userData.id = data.objectUUID;
+                    customShape.position.set(0, 0, -1);
+
+                    this.scene.add(customShape);
+
+                    this.objects.push(customShape);
 
                     break;
                 default:
