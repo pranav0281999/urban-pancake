@@ -17,6 +17,7 @@ let canvasWidth = 0.8;
 let addArrowButton = document.getElementById("add_arrow");
 let addConeButton = document.getElementById("add_cone");
 let addCustomShapeButton = document.getElementById("add_custom_shape");
+let clearCanvasButton = document.getElementById("clear_canvas");
 let addTextButton = document.getElementById("add_text");
 let textInput = document.getElementById("text_input_sprite");
 let removeButton = document.getElementById("remove_object");
@@ -24,6 +25,7 @@ let removeButton = document.getElementById("remove_object");
 addArrowButton.addEventListener("click", addArrow);
 addConeButton.addEventListener("click", addCone);
 addCustomShapeButton.addEventListener("click", addCustomShape);
+clearCanvasButton.addEventListener("click", clearCustomShape);
 addTextButton.addEventListener("click", addText);
 removeButton.addEventListener("click", removeObject);
 
@@ -136,9 +138,9 @@ function createCustomShape(points, material) {
 
     let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeo, false);
 
-    let arrow = new THREE.Mesh(object, material);
+    let customShape = new THREE.Mesh(object, material);
 
-    return arrow;
+    return customShape;
 }
 
 function createArrowMesh(length, material) {
@@ -258,10 +260,7 @@ function addArrow() {
 }
 
 function addCustomShape() {
-    const points = [];
-    for (let j = 0; j < Math.PI; j += (0.5 * Math.PI) / 100) {
-        points.push(new THREE.Vector3(Math.cos(j), Math.sin(j), 0));
-    }
+    let points = customShapeCanvas.getPoints();
 
     let customShape = createCustomShape(points, new THREE.MeshNormalMaterial());
     customShape.position.set(0, 0, -1);
@@ -281,6 +280,10 @@ function addCustomShape() {
         objectUUID: uuid,
         points: points
     });
+}
+
+function clearCustomShape() {
+    customShapeCanvas.clearCanvas();
 }
 
 function removeObject() {

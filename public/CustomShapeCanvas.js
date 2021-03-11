@@ -12,6 +12,7 @@ class CustomShapeCanvas {
         this.mouseDown = false;
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
+        this.points = [];
     }
 
     init = () => {
@@ -39,6 +40,16 @@ class CustomShapeCanvas {
         this.render();
     }
 
+    clearCanvas = () => {
+        this.points = [];
+
+        for (let i = this.scene.children.length - 1; i > 0; i--) {
+            this.scene.remove(this.scene.children[i]);
+        }
+
+        this.render();
+    }
+
     onClick = (event) => {
         event.preventDefault();
 
@@ -55,8 +66,10 @@ class CustomShapeCanvas {
             const intersects = this.raycaster.intersectObject(this.planeMesh);
 
             for (let i = 0; i < intersects.length; i++) {
+                this.points.push(new THREE.Vector3(intersects[i].point.x, intersects[i].point.y, 0));
+
                 let sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.01, 5, 5), new THREE.MeshNormalMaterial());
-                sphere.position.set(intersects[i].point.x, intersects[i].point.y, intersects[i].point.z);
+                sphere.position.set(intersects[i].point.x, intersects[i].point.y, -1);
                 this.scene.add(sphere);
             }
 
@@ -72,6 +85,10 @@ class CustomShapeCanvas {
         this.camera.updateProjectionMatrix();
 
         this.render();
+    }
+
+    getPoints = () => {
+        return this.points;
     }
 
     render = () => {
