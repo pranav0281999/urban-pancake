@@ -26,12 +26,24 @@
         input {
             width: 80%;
         }
+
+        #canvas_draw_custom {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 80%;
+        }
     </style>
 </head>
 <body>
 
 <div style="display: flex; flex-direction: row">
-    <canvas id="canvas"></canvas>
+    <!--    <div id="canvas_main_div">-->
+    <canvas id="canvas_main"></canvas>
+    <!--    </div>-->
+    <!--    <div id="canvas_draw_custom_div">-->
+    <canvas id="canvas_draw_custom"></canvas>
+    <!--    </div>-->
     <div id="options">
         <button id="add_cone">Add Cone</button>
         <br>

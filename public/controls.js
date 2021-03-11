@@ -3,12 +3,16 @@ import {DragControls} from './libs/three/jsm/DragControls.js';
 import {io} from "socket.io-client";
 import SpriteText from './libs/Spritetext.js';
 import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
+import {CustomShapeCanvas} from "./CustomShapeCanvas.js";
 
 let canvas;
 let camera, scene, renderer;
 let controls, group;
 let socket;
 let planeMesh;
+let customShapeCanvas = new CustomShapeCanvas();
+
+let canvasWidth = 0.8;
 
 let addArrowButton = document.getElementById("add_arrow");
 let addConeButton = document.getElementById("add_cone");
@@ -29,9 +33,9 @@ init();
 
 function init() {
 
-    canvas = document.getElementById('canvas');
+    canvas = document.getElementById('canvas_main');
 
-    camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 20);
+    camera = new THREE.PerspectiveCamera(90, window.innerWidth * canvasWidth / window.innerHeight, 0.01, 20);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
@@ -49,7 +53,7 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth * canvasWidth, window.innerHeight);
 
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -87,6 +91,8 @@ function init() {
     render();
 
     setupSocket();
+
+    customShapeCanvas.init();
 }
 
 function setupSocket() {
@@ -290,10 +296,10 @@ function removeObject() {
 
 function onWindowResize() {
 
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = window.innerWidth * canvasWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth * canvasWidth, window.innerHeight);
 
     render();
 
