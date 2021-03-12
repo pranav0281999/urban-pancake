@@ -2,9 +2,11 @@ import * as THREE from 'three';
 import {createCylinderFromEnds} from "./CommonUtils";
 
 class CustomShapeCanvas {
-    constructor() {
+    constructor(shapeRadius) {
         this.canvasWidth = 0.2;
         this.canvasHeight = 0.5;
+
+        this.shapeRadius = shapeRadius;
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0.1, 20);
@@ -79,8 +81,8 @@ class CustomShapeCanvas {
                     });
 
                     let cylGeo = createCylinderFromEnds(
-                        0.01,
-                        0.01,
+                        this.shapeRadius,
+                        this.shapeRadius,
                         this.prevPoint,
                         new THREE.Vector3(intersects[i].point.x, intersects[i].point.y, 0),
                         5,
@@ -90,7 +92,7 @@ class CustomShapeCanvas {
                     this.scene.add(customShape);
                 }
 
-                let sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.01, 5, 5), new THREE.MeshNormalMaterial());
+                let sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(this.shapeRadius, 5, 5), new THREE.MeshNormalMaterial());
                 sphere.position.set(intersects[i].point.x, intersects[i].point.y, -1);
                 this.scene.add(sphere);
 

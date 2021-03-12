@@ -4,9 +4,7 @@ import {Stats} from './libs/stats.module.js';
 import {CanvasUI} from './libs/CanvasUI.js'
 import {ARButton} from './libs/ARButton.js';
 import {ControllerGestures} from './libs/ControllerGestures.js';
-import SpriteText from './libs/Spritetext.js';
-import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
-import {createCylinderFromEnds} from "./CommonUtils.js";
+import {createArrowMesh, createConeMesh, createText, createCustomShape} from "./CommonUtils.js";
 
 class App {
     function
@@ -14,6 +12,8 @@ class App {
     constructor() {
         const container = document.createElement('div');
         document.body.appendChild(container);
+
+        this.customShapeRadius = 0.005;
 
         this.clock = new THREE.Clock();
 
@@ -61,60 +61,6 @@ class App {
         // this.takeSnapshot();
     }
 
-    createConeMesh(radiusTop, height, material) {
-        return new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
-    }
-
-    createCustomShape = (points, material) => {
-        const cylinerGeometries = [];
-        for (let i = 0; i < points.length; i += 1) {
-            let cylGeo = createCylinderFromEnds(0.01, 0.01, points[i].pointOne, points[i].pointTwo, 5, false);
-            cylinerGeometries.push(cylGeo);
-
-            let sphereOne = new THREE.SphereBufferGeometry(0.01, 5, 5);
-            sphereOne.translate(points[i].pointOne.x, points[i].pointOne.y, points[i].pointOne.z);
-            cylinerGeometries.push(sphereOne);
-
-            let sphereTwo = new THREE.SphereBufferGeometry(0.01, 5, 5);
-            sphereTwo.translate(points[i].pointTwo.x, points[i].pointTwo.y, points[i].pointTwo.z);
-            cylinerGeometries.push(sphereTwo);
-        }
-
-        let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeometries, false);
-
-        let customShape = new THREE.Mesh(object, material);
-
-        return customShape;
-    }
-
-    createArrowMesh(length, material) {
-        let coneGeometry = new THREE.CylinderBufferGeometry(length * 0.1, 0, length * 0.2, 5, 1);
-
-        let lineGeometry = new THREE.CylinderBufferGeometry(length * 0.01, length * 0.01, length * 0.8, 5, 2);
-
-        coneGeometry.translate(0, -(length * 0.8) / 2, 0);
-        lineGeometry.translate(0, length * 0.1, 0);
-
-        let object = BufferGeometryUtils.mergeBufferGeometries([coneGeometry, lineGeometry], false);
-
-        let arrow = new THREE.Mesh(object, material);
-
-        arrow.userData.type = "arrow";
-
-        return arrow;
-    }
-
-    createText = (text, textHeight, color) => {
-        let spriteText = new SpriteText(text, textHeight, color);
-        spriteText.backgroundColor = "white";
-        // spriteText.borderWidth = 0.01;
-        // spriteText.borderColor = color;
-
-        spriteText.userData.type = "text";
-
-        return spriteText;
-    }
-
     setupSocket = () => {
         this.socket = io();
 
@@ -125,7 +71,7 @@ class App {
         this.socket.on("object_create", (data) => {
             switch (data.type) {
                 case "cone":
-                    let cone = this.createConeMesh(0.05, 0.1, new THREE.MeshNormalMaterial());
+                    let cone = createConeMesh(0.05, 0.1, new THREE.MeshNormalMaterial());
                     cone.userData.id = data.objectUUID;
                     cone.position.set(0, 0, -1);
 
@@ -135,7 +81,7 @@ class App {
 
                     break;
                 case "arrow":
-                    let arrow = this.createArrowMesh(0.1, new THREE.MeshNormalMaterial());
+                    let arrow = createArrowMesh(0.1, new THREE.MeshNormalMaterial());
                     arrow.userData.id = data.objectUUID;
                     arrow.position.set(0, 0, -1);
 
@@ -145,7 +91,7 @@ class App {
 
                     break;
                 case "text":
-                    let text = this.createText(data.text, 0.03, "red");
+                    let text = createText(data.text, 0.03, "red");
                     text.userData.id = data.objectUUID;
                     text.position.set(0, 0, -1);
 
@@ -155,7 +101,7 @@ class App {
 
                     break;
                 case "custom":
-                    let customShape = this.createCustomShape(data.points, new THREE.MeshNormalMaterial());
+                    let customShape = createCustomShape(data.points, this.customShapeRadius, new THREE.MeshNormalMaterial());
                     customShape.userData.id = data.objectUUID;
                     customShape.position.set(0, 0, -1);
 
@@ -207,10 +153,6 @@ class App {
     }
 
     initScene() {
-        // const geometry = new THREE.BoxBufferGeometry(1, 1, 1);
-        // const material = new THREE.MeshPhongMaterial({color: 0xffffff * Math.random()});
-        // this.GeoMesh = new THREE.AxisHelper(1);
-        // this.GeoMesh.visible = false;
         this.createUI();
     }
 

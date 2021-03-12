@@ -1,19 +1,17 @@
 import * as THREE from 'three';
 import {DragControls} from 'three/examples/jsm/controls/DragControls.js';
 import {io} from "socket.io-client";
-import SpriteText from './libs/Spritetext.js';
-import {BufferGeometryUtils} from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {CustomShapeCanvas} from "./CustomShapeCanvas.js";
-import {
-    createCylinderFromEnds
-} from "./CommonUtils.js";
+import {createArrowMesh, createConeMesh, createText, createCustomShape} from "./CommonUtils.js";
+
+let customShapeRadius = 0.005;
 
 let canvas;
 let camera, scene, renderer;
 let controls, group;
 let socket;
 let planeMesh;
-let customShapeCanvas = new CustomShapeCanvas();
+let customShapeCanvas = new CustomShapeCanvas(customShapeRadius);
 
 let canvasWidth = 0.8;
 
@@ -46,12 +44,6 @@ function init() {
     scene.background = new THREE.Color(0xf0f0f0);
 
     scene.add(new THREE.AmbientLight(0x505050));
-
-    // light.castShadow = true;
-    // light.shadow.camera.near = 1000;
-    // light.shadow.camera.far = 4000;
-    // light.shadow.mapSize.width = 1024;
-    // light.shadow.mapSize.height = 1024;
 
     group = new THREE.Group();
     scene.add(group);
@@ -91,7 +83,6 @@ function init() {
     controls.addEventListener('drag', sendPosition);
 
     window.addEventListener('resize', onWindowResize);
-    document.addEventListener('click', onClick);
 
     render();
 
@@ -121,64 +112,6 @@ function setupSocket() {
             render();
         })
     });
-}
-
-function createConeMesh(radiusTop, height, material) {
-    let cone = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, 0, height, 5, 1), material);
-
-    cone.userData.type = "cone";
-
-    return cone;
-}
-
-function createCustomShape(points, material) {
-    const cylinerGeometries = [];
-    for (let i = 0; i < points.length; i += 1) {
-        let cylGeo = createCylinderFromEnds(0.01, 0.01, points[i].pointOne, points[i].pointTwo, 5, false);
-        cylinerGeometries.push(cylGeo);
-
-        let sphereOne = new THREE.SphereBufferGeometry(0.01, 5, 5);
-        sphereOne.translate(points[i].pointOne.x, points[i].pointOne.y, points[i].pointOne.z);
-        cylinerGeometries.push(sphereOne);
-
-        let sphereTwo = new THREE.SphereBufferGeometry(0.01, 5, 5);
-        sphereTwo.translate(points[i].pointTwo.x, points[i].pointTwo.y, points[i].pointTwo.z);
-        cylinerGeometries.push(sphereTwo);
-    }
-
-    let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeometries, false);
-
-    let customShape = new THREE.Mesh(object, material);
-
-    return customShape;
-}
-
-function createArrowMesh(length, material) {
-    let coneGeometry = new THREE.CylinderBufferGeometry(length * 0.1, 0, length * 0.2, 5, 1);
-
-    let lineGeometry = new THREE.CylinderBufferGeometry(length * 0.01, length * 0.01, length * 0.8, 5, 2);
-
-    coneGeometry.translate(0, -(length * 0.8) / 2, 0);
-    lineGeometry.translate(0, length * 0.1, 0);
-
-    let object = BufferGeometryUtils.mergeBufferGeometries([coneGeometry, lineGeometry], false);
-
-    let arrow = new THREE.Mesh(object, material);
-
-    arrow.userData.type = "arrow";
-
-    return arrow;
-}
-
-function createText(text, textHeight, color) {
-    let spriteText = new SpriteText(text, textHeight, color);
-    spriteText.backgroundColor = "white";
-    // spriteText.borderWidth = 0.01;
-    // spriteText.borderColor = color;
-
-    spriteText.userData.type = "text";
-
-    return spriteText;
 }
 
 function uuidV4() {
@@ -221,6 +154,8 @@ function addCone() {
         type: "cone",
         objectUUID: uuid
     });
+
+    render();
 }
 
 function addText() {
@@ -247,6 +182,8 @@ function addText() {
 
         textInput.value = "";
     }
+
+    render();
 }
 
 function addArrow() {
@@ -267,13 +204,15 @@ function addArrow() {
         type: "arrow",
         objectUUID: uuid
     });
+
+    render();
 }
 
 function addCustomShape() {
     let points = customShapeCanvas.getPoints();
 
     if (points.length > 0) {
-        let customShape = createCustomShape(points, new THREE.MeshNormalMaterial());
+        let customShape = createCustomShape(points, customShapeRadius, new THREE.MeshNormalMaterial());
         customShape.position.set(0, 0, -1);
 
         const uuid = uuidV4();
@@ -292,6 +231,8 @@ function addCustomShape() {
             points: points
         });
     }
+
+    render();
 }
 
 function clearCustomShape() {
@@ -307,6 +248,8 @@ function removeObject() {
     socket.emit("object_delete", {
         objectUUID: object.userData.id
     });
+
+    render();
 }
 
 function onWindowResize() {
@@ -329,13 +272,6 @@ function sendPosition(event) {
         },
         objectUUID: event.object.userData.id
     });
-}
-
-function onClick(event) {
-
-    event.preventDefault();
-
-    render();
 }
 
 function render() {
