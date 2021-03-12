@@ -1,9 +1,12 @@
-import * as THREE from './libs/three/three.module.js';
-import {DragControls} from './libs/three/jsm/DragControls.js';
+import * as THREE from 'three';
+import {DragControls} from 'three/examples/jsm/controls/DragControls.js';
 import {io} from "socket.io-client";
 import SpriteText from './libs/Spritetext.js';
-import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
+import {BufferGeometryUtils} from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {CustomShapeCanvas} from "./CustomShapeCanvas.js";
+import {
+    createCylinderFromEnds
+} from "./CommonUtils.js";
 
 let canvas;
 let camera, scene, renderer;
@@ -129,14 +132,21 @@ function createConeMesh(radiusTop, height, material) {
 }
 
 function createCustomShape(points, material) {
-    const cylinerGeo = [];
-    for (let j = 0; j < points.length; j += 1) {
-        let mesh = new THREE.SphereBufferGeometry(0.01, 5, 5);
-        mesh.translate(points[j].x, points[j].y, points[j].z);
-        cylinerGeo.push(mesh);
+    const cylinerGeometries = [];
+    for (let i = 0; i < points.length; i += 1) {
+        let cylGeo = createCylinderFromEnds(0.01, 0.01, points[i].pointOne, points[i].pointTwo, 5, false);
+        cylinerGeometries.push(cylGeo);
+
+        let sphereOne = new THREE.SphereBufferGeometry(0.01, 5, 5);
+        sphereOne.translate(points[i].pointOne.x, points[i].pointOne.y, points[i].pointOne.z);
+        cylinerGeometries.push(sphereOne);
+
+        let sphereTwo = new THREE.SphereBufferGeometry(0.01, 5, 5);
+        sphereTwo.translate(points[i].pointTwo.x, points[i].pointTwo.y, points[i].pointTwo.z);
+        cylinerGeometries.push(sphereTwo);
     }
 
-    let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeo, false);
+    let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeometries, false);
 
     let customShape = new THREE.Mesh(object, material);
 
@@ -262,24 +272,26 @@ function addArrow() {
 function addCustomShape() {
     let points = customShapeCanvas.getPoints();
 
-    let customShape = createCustomShape(points, new THREE.MeshNormalMaterial());
-    customShape.position.set(0, 0, -1);
+    if (points.length > 0) {
+        let customShape = createCustomShape(points, new THREE.MeshNormalMaterial());
+        customShape.position.set(0, 0, -1);
 
-    const uuid = uuidV4();
+        const uuid = uuidV4();
 
-    customShape.userData.id = uuid;
+        customShape.userData.id = uuid;
 
-    scene.add(customShape);
+        scene.add(customShape);
 
-    objects.push(customShape);
+        objects.push(customShape);
 
-    addToDraggable(customShape);
+        addToDraggable(customShape);
 
-    socket.emit("object_create", {
-        type: "custom",
-        objectUUID: uuid,
-        points: points
-    });
+        socket.emit("object_create", {
+            type: "custom",
+            objectUUID: uuid,
+            points: points
+        });
+    }
 }
 
 function clearCustomShape() {

@@ -6,6 +6,7 @@ import {ARButton} from './libs/ARButton.js';
 import {ControllerGestures} from './libs/ControllerGestures.js';
 import SpriteText from './libs/Spritetext.js';
 import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
+import {createCylinderFromEnds} from "./CommonUtils.js";
 
 class App {
     function
@@ -65,18 +66,25 @@ class App {
     }
 
     createCustomShape = (points, material) => {
-        const cylinerGeo = [];
-        for (let j = 0; j < points.length; j += 1) {
-            let mesh = new THREE.SphereBufferGeometry(0.01, 5, 5);
-            mesh.translate(points[j].x, points[j].y, points[j].z);
-            cylinerGeo.push(mesh);
+        const cylinerGeometries = [];
+        for (let i = 0; i < points.length; i += 1) {
+            let cylGeo = createCylinderFromEnds(0.01, 0.01, points[i].pointOne, points[i].pointTwo, 5, false);
+            cylinerGeometries.push(cylGeo);
+
+            let sphereOne = new THREE.SphereBufferGeometry(0.01, 5, 5);
+            sphereOne.translate(points[i].pointOne.x, points[i].pointOne.y, points[i].pointOne.z);
+            cylinerGeometries.push(sphereOne);
+
+            let sphereTwo = new THREE.SphereBufferGeometry(0.01, 5, 5);
+            sphereTwo.translate(points[i].pointTwo.x, points[i].pointTwo.y, points[i].pointTwo.z);
+            cylinerGeometries.push(sphereTwo);
         }
 
-        let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeo, false);
+        let object = BufferGeometryUtils.mergeBufferGeometries(cylinerGeometries, false);
 
-        let arrow = new THREE.Mesh(object, material);
+        let customShape = new THREE.Mesh(object, material);
 
-        return arrow;
+        return customShape;
     }
 
     createArrowMesh(length, material) {

@@ -1,4 +1,5 @@
-import * as THREE from './libs/three/three.module.js';
+import * as THREE from 'three';
+import {createCylinderFromEnds} from "./CommonUtils";
 
 class CustomShapeCanvas {
     constructor() {
@@ -12,7 +13,9 @@ class CustomShapeCanvas {
         this.mouseDown = false;
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
+        this.prevMouse = new THREE.Vector2();
         this.points = [];
+        this.prevPoint = null;
     }
 
     init = () => {
@@ -28,9 +31,11 @@ class CustomShapeCanvas {
         });
         this.canvas.addEventListener("mouseup", () => {
             this.mouseDown = false;
+            this.prevPoint = null;
         });
         this.canvas.addEventListener("mouseleave", () => {
             this.mouseDown = false;
+            this.prevPoint = null;
         });
 
         this.planeMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({color: "pink"}));
@@ -57,23 +62,44 @@ class CustomShapeCanvas {
     }
 
     onMouseMove = (event) => {
-        if (this.mouseDown) {
-            this.mouse.x = ((event.clientX + (window.pageXOffset - this.canvas.offsetLeft)) / this.canvas.width) * 2 - 1;
-            this.mouse.y = -((event.clientY + (window.pageYOffset - this.canvas.offsetTop)) / this.canvas.height) * 2 + 1;
+        this.mouse.x = ((event.clientX + (window.pageXOffset - this.canvas.offsetLeft)) / this.canvas.width) * 2 - 1;
+        this.mouse.y = -((event.clientY + (window.pageYOffset - this.canvas.offsetTop)) / this.canvas.height) * 2 + 1;
+
+        if (this.mouseDown && this.prevMouse.distanceTo(this.mouse) > 0.05) {
 
             this.raycaster.setFromCamera(this.mouse, this.camera);
 
             const intersects = this.raycaster.intersectObject(this.planeMesh);
 
             for (let i = 0; i < intersects.length; i++) {
-                this.points.push(new THREE.Vector3(intersects[i].point.x, intersects[i].point.y, 0));
+                if (this.prevPoint) {
+                    this.points.push({
+                        pointOne: this.prevPoint,
+                        pointTwo: new THREE.Vector3(intersects[i].point.x, intersects[i].point.y, 0)
+                    });
+
+                    let cylGeo = createCylinderFromEnds(
+                        0.01,
+                        0.01,
+                        this.prevPoint,
+                        new THREE.Vector3(intersects[i].point.x, intersects[i].point.y, 0),
+                        5,
+                        false);
+                    let customShape = new THREE.Mesh(cylGeo, new THREE.MeshNormalMaterial());
+                    customShape.position.z = -1;
+                    this.scene.add(customShape);
+                }
 
                 let sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.01, 5, 5), new THREE.MeshNormalMaterial());
                 sphere.position.set(intersects[i].point.x, intersects[i].point.y, -1);
                 this.scene.add(sphere);
+
+                this.prevPoint = new THREE.Vector3(intersects[i].point.x, intersects[i].point.y, 0);
             }
 
             this.render();
+
+            this.prevMouse.copy(this.mouse);
         }
     }
 
