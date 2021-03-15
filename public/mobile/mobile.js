@@ -1,12 +1,12 @@
-import * as THREE from './libs/three/three.module.js';
-import {OrbitControls} from './libs/three/jsm/OrbitControls.js';
-import {Stats} from './libs/stats.module.js';
-import {CanvasUI} from './libs/CanvasUI.js'
-import {ARButton} from './libs/ARButton.js';
-import {ControllerGestures} from './libs/ControllerGestures.js';
-import {createArrowMesh, createConeMesh, createText, createCustomShape} from "./CommonUtils.js";
+import * as THREE from './lib/three/three.module.js';
+import {OrbitControls} from './lib/three/jsm/OrbitControls.js';
+import {Stats} from './lib/stats.module.js';
+import {CanvasUI} from './lib/CanvasUI.js'
+import {ARButton} from './lib/ARButton.js';
+import {ControllerGestures} from './lib/ControllerGestures.js';
+import {createArrowMesh, createConeMesh, createText, createCustomShape} from "./lib/CommonUtils.js";
 
-class App {
+class Mobile {
     function
 
     constructor() {
@@ -270,4 +270,4 @@ class App {
     }
 }
 
-export {App};
+export {Mobile};

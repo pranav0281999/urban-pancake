@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {createCylinderFromEnds} from "./CommonUtils";
+import {createCylinderFromEnds} from "./libs/CommonUtils";
 
 class CustomShapeCanvas {
     constructor(shapeRadius) {

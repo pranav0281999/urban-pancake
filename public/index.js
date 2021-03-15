@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {DragControls} from 'three/examples/jsm/controls/DragControls.js';
 import {io} from "socket.io-client";
 import {CustomShapeCanvas} from "./CustomShapeCanvas.js";
-import {createArrowMesh, createConeMesh, createText, createCustomShape} from "./CommonUtils.js";
+import {createArrowMesh, createConeMesh, createText, createCustomShape} from "./libs/CommonUtils.js";
 
 let customShapeRadius = 0.005;
 

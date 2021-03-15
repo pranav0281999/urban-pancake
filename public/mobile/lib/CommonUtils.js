@@ -1,6 +1,6 @@
-import * as THREE from "./libs/three/three.module.js";
-import {BufferGeometryUtils} from "./libs/BufferGeometryUtils.js";
-import SpriteText from "./libs/Spritetext.js";
+import * as THREE from "./three/three.module.js";
+import {BufferGeometryUtils} from "./three/jsm/BufferGeometryUtils.js";
+import SpriteText from "./Spritetext.js";
 
 function getCylinderLength(vec1, vec2) {
     return Math.sqrt(Math.pow(vec1.x - vec2.x, 2) + Math.pow(vec1.y - vec2.y, 2) + Math.pow(vec1.z - vec2.z, 2));

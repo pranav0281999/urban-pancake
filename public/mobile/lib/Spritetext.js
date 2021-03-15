@@ -3,7 +3,7 @@ import {
     Sprite,
     SpriteMaterial,
     Texture
-} from 'three';
+} from '../lib/three/three.module.js';
 
 const three = typeof window !== 'undefined' && window.THREE
     ? window.THREE // Prefer consumption from global THREE, if exists

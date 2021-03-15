@@ -2,7 +2,10 @@ const webpack = require("webpack");
 const path = require("path");
 
 module.exports = {
-    entry: {app: "./public/app.js", controls: "./public/controls.js"},
+    entry: {
+        // mobile: "./public/mobile/mobile.js",
+        index: "./public/index.js"
+    },
     output: {
         path: path.resolve(__dirname, "public", "build"),
         publicPath: "/public/build/",
